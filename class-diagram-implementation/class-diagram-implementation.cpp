@@ -139,6 +139,10 @@ void viewProducts() {
         if (!found) {
             cout << "Invalid Product ID!\n";
         }
+        char choice;
+        cout << "Do you want to add another product? (Y/N): ";
+        cin >> choice;
+        if (choice == 'N' || choice == 'n') break;
     }
 }
 
@@ -165,11 +169,16 @@ int main() {
             case 1: viewProducts(); break;
             case 2: 
                 cart.viewCart();
-                if (orderCount < MAX_ORDERS) {
-                    double total = cart.checkout();
-                    if (total > 0) {
-                        orders[orderCount] = Order(orderCount + 1, total, cart.getItems(), cart.getQuantities(), cart.getItemCount());
-                        orderCount++;
+                char confirm;
+                cout << "Do you want to check out all the products? (Y/N): ";
+                cin >> confirm;
+                if (confirm == 'Y' || confirm == 'y') {
+                    if (orderCount < MAX_ORDERS) {
+                        double total = cart.checkout();
+                        if (total > 0) {
+                            orders[orderCount] = Order(orderCount + 1, total, cart.getItems(), cart.getQuantities(), cart.getItemCount());
+                            orderCount++;
+                        }
                     }
                 }
                 break;
