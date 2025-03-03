@@ -114,6 +114,26 @@ void viewProducts() {
     for (int i = 0; i < productCount; i++) {
         cout << left << setw(15) << products[i].productId << setw(15) << products[i].name << setw(10) << products[i].price << products[i].stockQuantity << endl;
     }
+    string productId;
+    while (true) {
+        cout << "Enter the Product ID to add to cart (or 'exit' to return): ";
+        cin >> productId;
+        if (productId == "exit") break;
+        int quantity;
+        cout << "Enter quantity: ";
+        cin >> quantity;
+        bool found = false;
+        for (int i = 0; i < productCount; i++) {
+            if (products[i].productId == productId) {
+                cart.addProduct(products[i], quantity);
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            cout << "Invalid Product ID!\n";
+        }
+    }
 }
 
 void viewOrders() {
@@ -151,4 +171,4 @@ int main() {
             default: cout << "Invalid choice. Please try again.\n";
         }
     }
-} 
+}
