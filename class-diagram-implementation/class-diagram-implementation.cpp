@@ -114,30 +114,6 @@ void viewProducts() {
     for (int i = 0; i < productCount; i++) {
         cout << left << setw(15) << products[i].productId << setw(15) << products[i].name << setw(10) << products[i].price << products[i].stockQuantity << endl;
     }
-    string productId;
-    while (true) {
-        cout << "Enter the Product ID to add to cart (or 'exit' to return): ";
-        cin >> productId;
-        if (productId == "exit") break;
-        int quantity;
-        cout << "Enter quantity: ";
-        cin >> quantity;
-        bool found = false;
-        for (int i = 0; i < productCount; i++) {
-            if (products[i].productId == productId) {
-                cart.addProduct(products[i], quantity);
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            cout << "Invalid Product ID!\n";
-        }
-        char choice;
-        cout << "Do you want to add another product? (Y/N): ";
-        cin >> choice;
-        if (choice == 'N' || choice == 'n') break;
-    }
 }
 
 void viewOrders() {
@@ -155,30 +131,24 @@ int main() {
     while (true) {
         cout << "\nMain Menu:\n";
         cout << "1. View Products\n2. View Shopping Cart\n3. View Orders\n4. Exit\n";
+        string input;
         int choice;
         cout << "Enter your choice: ";
-        cin >> choice;
+        cin >> input;
+        
+        if (input.length() == 1 && isdigit(input[0])) {
+            choice = input[0] - '0';
+        } else {
+            cout << "Invalid choice. Please try again.\n";
+            continue;
+        }
         
         switch (choice) {
             case 1: viewProducts(); break;
-            case 2: 
-                cart.viewCart();
-                char confirm;
-                cout << "Do you want to check out all the products? (Y/N): ";
-                cin >> confirm;
-                if (confirm == 'Y' || confirm == 'y') {
-                    if (orderCount < MAX_ORDERS) {
-                        double total = cart.checkout();
-                        if (total > 0) {
-                            orders[orderCount] = Order(orderCount + 1, total, cart.items, cart.quantities, cart.itemCount);
-                            orderCount++;
-                        }
-                    }
-                }
-                break;
+            case 2: cart.viewCart(); break;
             case 3: viewOrders(); break;
             case 4: cout << "Exiting...\n"; return 0;
             default: cout << "Invalid choice. Please try again.\n";
         }
     }
-}
+} 
