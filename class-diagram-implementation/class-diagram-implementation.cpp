@@ -72,6 +72,10 @@ public:
         cout << "You have successfully checked out the products!\n";
         return totalPrice;
     }
+
+    Product* getItems() { return items; }
+    int* getQuantities() { return quantities; }
+    int getItemCount() { return itemCount; }
 };
 
 class Order {
@@ -164,7 +168,7 @@ int main() {
                 if (orderCount < MAX_ORDERS) {
                     double total = cart.checkout();
                     if (total > 0) {
-                        orders[orderCount] = Order(orderCount + 1, total, cart.items, cart.quantities, cart.itemCount);
+                        orders[orderCount] = Order(orderCount + 1, total, cart.getItems(), cart.getQuantities(), cart.getItemCount());
                         orderCount++;
                     }
                 }
