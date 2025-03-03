@@ -1,8 +1,12 @@
 #include <iostream>
-#include <vector>
 #include <iomanip>
+#include <cstring>
 
 using namespace std;
+
+const int MAX_PRODUCTS = 10;
+const int MAX_ORDERS = 10;
+const int MAX_CART_ITEMS = 10;
 
 class Product {
 public:
@@ -10,53 +14,61 @@ public:
     double price;
     int stockQuantity;
     
+    Product() {}
     Product(string id, string n, double p, int qty) : productId(id), name(n), price(p), stockQuantity(qty) {}
 };
 
 class ShoppingCart {
 private:
-    vector<pair<Product, int>> items;
+    Product items[MAX_CART_ITEMS];
+    int quantities[MAX_CART_ITEMS];
+    int itemCount;
 
 public:
+    ShoppingCart() : itemCount(0) {}
+
     void addProduct(Product& product, int quantity) {
         if (product.stockQuantity >= quantity) {
             product.stockQuantity -= quantity;
-            bool found = false;
-            for (auto& item : items) {
-                if (item.first.productId == product.productId) {
-                    item.second += quantity;
-                    found = true;
-                    break;
+            for (int i = 0; i < itemCount; i++) {
+                if (items[i].productId == product.productId) {
+                    quantities[i] += quantity;
+                    cout << "Product added successfully!\n";
+                    return;
                 }
             }
-            if (!found) {
-                items.push_back(make_pair(product, quantity));
+            if (itemCount < MAX_CART_ITEMS) {
+                items[itemCount] = product;
+                quantities[itemCount] = quantity;
+                itemCount++;
+                cout << "Product added successfully!\n";
+            } else {
+                cout << "Cart is full!\n";
             }
-            cout << "Product added successfully!\n";
         } else {
             cout << "Insufficient stock!\n";
         }
     }
     
     void viewCart() {
-        if (items.empty()) {
+        if (itemCount == 0) {
             cout << "Shopping cart is empty.\n";
             return;
         }
         cout << "\nShopping Cart:\n";
         cout << left << setw(15) << "Product ID" << setw(15) << "Name" << setw(10) << "Price" << "Quantity" << endl;
-        for (auto& item : items) {
-            cout << left << setw(15) << item.first.productId << setw(15) << item.first.name
-                 << setw(10) << item.first.price << item.second << endl;
+        for (int i = 0; i < itemCount; i++) {
+            cout << left << setw(15) << items[i].productId << setw(15) << items[i].name
+                 << setw(10) << items[i].price << quantities[i] << endl;
         }
     }
     
     double checkout() {
         double totalPrice = 0;
-        for (auto& item : items) {
-            totalPrice += item.first.price * item.second;
+        for (int i = 0; i < itemCount; i++) {
+            totalPrice += items[i].price * quantities[i];
         }
-        items.clear();
+        itemCount = 0;
         cout << "You have successfully checked out the products!\n";
         return totalPrice;
     }
@@ -66,33 +78,43 @@ class Order {
 public:
     int orderId;
     double totalAmount;
-    vector<pair<Product, int>> orderItems;
+    Product orderItems[MAX_CART_ITEMS];
+    int quantities[MAX_CART_ITEMS];
+    int itemCount;
     
-    Order(int id, double amount, vector<pair<Product, int>> items) : orderId(id), totalAmount(amount), orderItems(items) {}
+    Order() {}
+    Order(int id, double amount, Product items[], int qty[], int count) : orderId(id), totalAmount(amount), itemCount(count) {
+        for (int i = 0; i < count; i++) {
+            orderItems[i] = items[i];
+            quantities[i] = qty[i];
+        }
+    }
     
     void displayOrder() {
         cout << "\nOrder ID: " << orderId << "\nTotal Amount: " << totalAmount << "\nOrder Details:\n";
         cout << left << setw(15) << "Product ID" << setw(15) << "Name" << setw(10) << "Price" << "Quantity" << endl;
-        for (auto& item : orderItems) {
-            cout << left << setw(15) << item.first.productId << setw(15) << item.first.name
-                 << setw(10) << item.first.price << item.second << endl;
+        for (int i = 0; i < itemCount; i++) {
+            cout << left << setw(15) << orderItems[i].productId << setw(15) << orderItems[i].name
+                 << setw(10) << orderItems[i].price << quantities[i] << endl;
         }
     }
 };
 
-vector<Product> products = {
+Product products[MAX_PRODUCTS] = {
     Product("P001", "Paper", 20, 10),
     Product("P002", "Pencil", 10, 20),
     Product("P003", "Notebook", 50, 15)
 };
-vector<Order> orders;
+int productCount = 3;
+Order orders[MAX_ORDERS];
+int orderCount = 0;
 ShoppingCart cart;
 
 void viewProducts() {
     cout << "\nAvailable Products:\n";
     cout << left << setw(15) << "Product ID" << setw(15) << "Name" << setw(10) << "Price" << "Stock" << endl;
-    for (auto& p : products) {
-        cout << left << setw(15) << p.productId << setw(15) << p.name << setw(10) << p.price << p.stockQuantity << endl;
+    for (int i = 0; i < productCount; i++) {
+        cout << left << setw(15) << products[i].productId << setw(15) << products[i].name << setw(10) << products[i].price << products[i].stockQuantity << endl;
     }
     string productId;
     while (true) {
@@ -102,22 +124,27 @@ void viewProducts() {
         int quantity;
         cout << "Enter quantity: ";
         cin >> quantity;
-        auto it = find_if(products.begin(), products.end(), [&](Product& p) { return p.productId == productId; });
-        if (it != products.end()) {
-            cart.addProduct(*it, quantity);
-        } else {
+        bool found = false;
+        for (int i = 0; i < productCount; i++) {
+            if (products[i].productId == productId) {
+                cart.addProduct(products[i], quantity);
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
             cout << "Invalid Product ID!\n";
         }
     }
 }
 
 void viewOrders() {
-    if (orders.empty()) {
+    if (orderCount == 0) {
         cout << "No orders placed yet.\n";
         return;
     }
-    for (auto& order : orders) {
-        order.displayOrder();
+    for (int i = 0; i < orderCount; i++) {
+        orders[i].displayOrder();
         cout << "\n";
     }
 }
@@ -132,9 +159,15 @@ int main() {
         
         switch (choice) {
             case 1: viewProducts(); break;
-            case 2: cart.viewCart();
-                if (!cart.checkout()) break;
-                orders.emplace_back(orders.size() + 1, cart.checkout(), vector<pair<Product, int>>());
+            case 2: 
+                cart.viewCart();
+                if (orderCount < MAX_ORDERS) {
+                    double total = cart.checkout();
+                    if (total > 0) {
+                        orders[orderCount] = Order(orderCount + 1, total, cart.items, cart.quantities, cart.itemCount);
+                        orderCount++;
+                    }
+                }
                 break;
             case 3: viewOrders(); break;
             case 4: cout << "Exiting...\n"; return 0;
