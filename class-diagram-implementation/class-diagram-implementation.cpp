@@ -12,10 +12,9 @@ class Product {
 public:
     string productId, name;
     double price;
-    int stockQuantity;
-    
+
     Product() {}
-    Product(string id, string n, double p, int qty) : productId(id), name(n), price(p), stockQuantity(qty) {}
+    Product(string id, string n, double p) : productId(id), name(n), price(p) {}
 };
 
 class ShoppingCart {
@@ -26,26 +25,21 @@ public:
 
     ShoppingCart() : itemCount(0) {}
 
-    void addProduct(Product& product, int quantity) {
-        if (product.stockQuantity >= quantity) {
-            product.stockQuantity -= quantity;
-            for (int i = 0; i < itemCount; i++) {
-                if (items[i].productId == product.productId) {
-                    quantities[i] += quantity;
-                    cout << "Product added successfully!\n";
-                    return;
-                }
-            }
-            if (itemCount < MAX_CART_ITEMS) {
-                items[itemCount] = product;
-                quantities[itemCount] = quantity;
-                itemCount++;
+    void addProduct(Product product, int quantity) {
+        for (int i = 0; i < itemCount; i++) {
+            if (items[i].productId == product.productId) {
+                quantities[i] += quantity;
                 cout << "Product added successfully!\n";
-            } else {
-                cout << "Cart is full!\n";
+                return;
             }
+        }
+        if (itemCount < MAX_CART_ITEMS) {
+            items[itemCount] = product;
+            quantities[itemCount] = quantity;
+            itemCount++;
+            cout << "Product added successfully!\n";
         } else {
-            cout << "Insufficient stock!\n";
+            cout << "Cart is full!\n";
         }
     }
     
@@ -60,15 +54,6 @@ public:
             cout << left << setw(15) << items[i].productId << setw(15) << items[i].name
                  << setw(10) << items[i].price << quantities[i] << endl;
         }
-    }
-    
-    double checkout() {
-        double totalPrice = 0;
-        for (int i = 0; i < itemCount; i++) {
-            totalPrice += items[i].price * quantities[i];
-        }
-        cout << "You have successfully checked out the products!\n";
-        return totalPrice;
     }
 };
 
@@ -99,9 +84,9 @@ public:
 };
 
 Product products[MAX_PRODUCTS] = {
-    Product("P001", "Paper", 20, 10),
-    Product("P002", "Pencil", 10, 20),
-    Product("P003", "Notebook", 50, 15)
+    Product("P001", "Paper", 20),
+    Product("P002", "Pencil", 10),
+    Product("P003", "Notebook", 50)
 };
 int productCount = 3;
 Order orders[MAX_ORDERS];
@@ -110,9 +95,9 @@ ShoppingCart cart;
 
 void viewProducts() {
     cout << "\nAvailable Products:\n";
-    cout << left << setw(15) << "Product ID" << setw(15) << "Name" << setw(10) << "Price" << "Stock" << endl;
+    cout << left << setw(15) << "Product ID" << setw(15) << "Name" << setw(10) << "Price" << endl;
     for (int i = 0; i < productCount; i++) {
-        cout << left << setw(15) << products[i].productId << setw(15) << products[i].name << setw(10) << products[i].price << products[i].stockQuantity << endl;
+        cout << left << setw(15) << products[i].productId << setw(15) << products[i].name << setw(10) << products[i].price << endl;
     }
     string productId;
     while (true) {
@@ -121,7 +106,12 @@ void viewProducts() {
         if (productId == "exit") break;
         int quantity;
         cout << "Enter quantity: ";
-        cin >> quantity;
+        if (!(cin >> quantity) || quantity <= 0) {
+            cout << "Invalid quantity. Please try again.\n";
+            cin.clear();
+            cin.ignore(10000, '\n');
+            continue;
+        }
         bool found = false;
         for (int i = 0; i < productCount; i++) {
             if (products[i].productId == productId) {
@@ -147,6 +137,38 @@ void viewOrders() {
     }
 }
 
+void checkoutCart() {
+    if (cart.itemCount == 0) {
+        cout << "Shopping cart is empty. No items to check out.\n";
+        return;
+    }
+
+    while (true) {
+        string confirm;
+        cout << "Do you want to check out all the products? (Y/N): ";
+        cin >> confirm;
+        if (confirm == "Y" || confirm == "y" || confirm == "N" || confirm == "n") {
+            if (confirm == "Y" || confirm == "y") {
+                if (orderCount < MAX_ORDERS) {
+                    double total = 0;
+                    for (int i = 0; i < cart.itemCount; i++) {
+                        total += cart.items[i].price * cart.quantities[i];
+                    }
+                    orders[orderCount] = Order(orderCount + 1, total, cart.items, cart.quantities, cart.itemCount);
+                    orderCount++;
+                    cout << "You have successfully checked out the products!\n";
+                    cart.itemCount = 0;  // Clear the cart only after creating the order
+                } else {
+                    cout << "Order limit reached! Cannot place more orders.\n";
+                }
+            }
+            break;
+        } else {
+            cout << "Invalid choice. Please try again.\n";
+        }
+    }
+}
+
 int main() {
     while (true) {
         cout << "\nMain Menu:\n";
@@ -160,12 +182,14 @@ int main() {
             choice = input[0] - '0';
         } else {
             cout << "Invalid choice. Please try again.\n";
+            cin.clear();
+            cin.ignore(10000, '\n');
             continue;
         }
-        
+
         switch (choice) {
             case 1: viewProducts(); break;
-            case 2: cart.viewCart(); break;
+            case 2: cart.viewCart(); checkoutCart(); break;
             case 3: viewOrders(); break;
             case 4: cout << "Exiting...\n"; return 0;
             default: cout << "Invalid choice. Please try again.\n";
