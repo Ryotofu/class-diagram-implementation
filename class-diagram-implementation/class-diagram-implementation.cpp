@@ -19,12 +19,11 @@ public:
 };
 
 class ShoppingCart {
-private:
+public:
     Product items[MAX_CART_ITEMS];
     int quantities[MAX_CART_ITEMS];
     int itemCount;
 
-public:
     ShoppingCart() : itemCount(0) {}
 
     void addProduct(Product& product, int quantity) {
@@ -68,14 +67,9 @@ public:
         for (int i = 0; i < itemCount; i++) {
             totalPrice += items[i].price * quantities[i];
         }
-        itemCount = 0;
         cout << "You have successfully checked out the products!\n";
         return totalPrice;
     }
-
-    Product* getItems() { return items; }
-    int* getQuantities() { return quantities; }
-    int getItemCount() { return itemCount; }
 };
 
 class Order {
@@ -176,7 +170,7 @@ int main() {
                     if (orderCount < MAX_ORDERS) {
                         double total = cart.checkout();
                         if (total > 0) {
-                            orders[orderCount] = Order(orderCount + 1, total, cart.getItems(), cart.getQuantities(), cart.getItemCount());
+                            orders[orderCount] = Order(orderCount + 1, total, cart.items, cart.quantities, cart.itemCount);
                             orderCount++;
                         }
                     }
